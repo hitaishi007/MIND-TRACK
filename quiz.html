@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Quiz</title>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#eef2f7;
+}
+
+header{
+  background:#0b2a55;
+  color:white;
+  padding:15px 40px;
+}
+
+.topbar{
+  background:#f8f9fc;
+  padding:12px 40px;
+  border-bottom:1px solid #ddd;
+}
+
+.main{
+  display:flex;
+  gap:20px;
+  padding:30px 40px;
+}
+
+.quiz-box{
+  flex:2;
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.options label{
+  display:block;
+  border:1px solid #ddd;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.options label:hover{
+  background:#eef5ff;
+}
+
+.btn{
+  margin-top:15px;
+  padding:10px 20px;
+  border:none;
+  border-radius:6px;
+  background:#2b59ff;
+  color:white;
+  cursor:pointer;
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+}
+
+.side{
+  flex:1;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+  text-align:center;
+}
+
+.timer{
+  font-size:28px;
+}
+
+.progress{
+  height:8px;
+  background:#ddd;
+  border-radius:5px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.bar{
+  height:100%;
+  background:#4CAF50;
+  width:0%;
+}
+
+.result{
+  margin-top:20px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>📘 Adaptive Learning</h2>
+</header>
+
+<div class="topbar">
+  Class: <b id="cls"></b> | Subject: <b id="sub"></b>
+</div>
+
+<div class="main">
+
+<div class="quiz-box">
+
+<h3 id="title"></h3>
+
+<div id="questionBox"></div>
+
+<div class="nav">
+  <button class="btn" onclick="prevQ()">Previous</button>
+  <button class="btn" onclick="nextQ()">Next</button>
+</div>
+
+<button class="btn" onclick="submitQuiz()">Submit</button>
+
+<div class="result" id="result"></div>
+
+</div>
+
+<div class="side">
+
+<div class="card">
+<h4>Time Left</h4>
+<div class="timer" id="timer">10:00</div>
+</div>
+
+<div class="card">
+<h4>Progress</h4>
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// GET PARAMS
+let params = new URLSearchParams(window.location.search);
+let cls = params.get("class") || "9";
+let sub = params.get("subject") || "maths";
+console.log("Class:", cls);
+console.log("Subject:", sub);
+
+document.getElementById("cls").innerText = cls;
+document.getElementById("sub").innerText = sub;
+document.getElementById("title").innerText = `Class ${cls} - ${sub} Quiz`;
+
+
+let questions = {
+
+  "9":{
+    "maths":[
+
+{q:"Which of the following is a rational number?", options:["√2","π","3/4","√5"], ans:"3/4"},
+
+{q:"The decimal expansion of 1/3 is:", options:["Terminating","Non-terminating recurring","Non-terminating non-recurring","Whole number"], ans:"Non-terminating recurring"},
+
+{q:"If a = 2 and b = 3, then a² + b² = ?", options:["5","13","25","9"], ans:"13"},
+
+{q:"Which of the following is a polynomial?", options:["1/x","x² + 2x + 1","√x","x⁻¹"], ans:"x² + 2x + 1"},
+
+{q:"Degree of polynomial 3x³ + 2x² + x is:", options:["1","2","3","4"], ans:"3"},
+
+{q:"The value of x in equation x + 5 = 10 is:", options:["5","10","15","0"], ans:"5"},
+
+{q:"Which of the following is a linear equation in one variable?", options:["x² + 2 = 0","2x + 3 = 7","x³ = 1","1/x = 2"], ans:"2x + 3 = 7"},
+
+{q:"Sum of angles of a triangle is:", options:["90°","180°","270°","360°"], ans:"180°"},
+
+{q:"Area of rectangle = ?", options:["l × b","l + b","2(l + b)","l²"], ans:"l × b"},
+
+{q:"The coordinates of origin are:", options:["(1,1)","(0,0)","(1,0)","(0,1)"], ans:"(0,0)"}
+
+],
+	
+	"physics":[
+
+{q:"The SI unit of force is:", options:["Joule","Newton","Watt","Pascal"], ans:"Newton"},
+
+{q:"Speed is defined as:", options:["Distance × Time","Distance / Time","Time / Distance","Acceleration × Time"], ans:"Distance / Time"},
+
+{q:"The unit of velocity is:", options:["m","m/s","m/s²","km"], ans:"m/s"},
+
+{q:"Acceleration is:", options:["Rate of change of velocity","Rate of change of distance","Distance covered per unit time","Force per unit area"], ans:"Rate of change of velocity"},
+
+{q:"Which of the following is a scalar quantity?", options:["Velocity","Force","Acceleration","Speed"], ans:"Speed"},
+
+{q:"The formula of force is:", options:["F = ma","F = mv","F = m/a","F = v/a"], ans:"F = ma"},
+
+{q:"Inertia depends on:", options:["Velocity","Mass","Force","Acceleration"], ans:"Mass"},
+
+{q:"The SI unit of work is:", options:["Watt","Joule","Newton","Pascal"], ans:"Joule"},
+
+{q:"Work done is zero when:", options:["Force is applied","Displacement is zero","Object moves","Velocity increases"], ans:"Displacement is zero"},
+
+{q:"Which law states that every action has equal and opposite reaction?", options:["First law","Second law","Third law","Law of inertia"], ans:"Third law"}
+
+],
+
+"chemistry":[
+
+{q:"Matter is anything that:", options:["Has no mass","Occupies space and has mass","Only visible","Only solid"], ans:"Occupies space and has mass"},
+
+{q:"The smallest unit of an element is:", options:["Atom","Molecule","Cell","Compound"], ans:"Atom"},
+
+{q:"Which state of matter has fixed shape and volume?", options:["Liquid","Gas","Solid","Plasma"], ans:"Solid"},
+
+{q:"Diffusion is fastest in:", options:["Solid","Liquid","Gas","All same"], ans:"Gas"},
+
+{q:"Water at 0°C exists in:", options:["Only solid","Only liquid","Both solid and liquid","Gas"], ans:"Both solid and liquid"},
+
+{q:"Which process is conversion of solid into gas directly?", options:["Melting","Condensation","Sublimation","Freezing"], ans:"Sublimation"},
+
+{q:"The SI unit of temperature is:", options:["Celsius","Kelvin","Fahrenheit","Joule"], ans:"Kelvin"},
+
+{q:"1 Kelvin is equal to:", options:["-273°C","273°C","0°C","100°C"], ans:"-273°C"},
+
+{q:"Which of the following is a pure substance?", options:["Air","Milk","Salt","Soil"], ans:"Salt"},
+
+{q:"A solution is a:", options:["Pure substance","Heterogeneous mixture","Homogeneous mixture","Compound"], ans:"Homogeneous mixture"}
+
+], 
+"biology":[
+
+{q:"The basic unit of life is:", options:["Atom","Cell","Tissue","Organ"], ans:"Cell"},
+
+{q:"Which cell organelle is known as the powerhouse of the cell?", options:["Nucleus","Mitochondria","Ribosome","Chloroplast"], ans:"Mitochondria"},
+
+{q:"Cell wall is present in:", options:["Animal cells","Plant cells","Both","None"], ans:"Plant cells"},
+
+{q:"Which part of the cell controls all activities?", options:["Cytoplasm","Nucleus","Cell membrane","Mitochondria"], ans:"Nucleus"},
+
+{q:"The process by which plants make food is called:", options:["Respiration","Digestion","Photosynthesis","Transpiration"], ans:"Photosynthesis"},
+
+{q:"Tissues are made up of:", options:["Organs","Cells","Systems","Molecules"], ans:"Cells"},
+
+{q:"Which tissue is responsible for movement in animals?", options:["Nervous tissue","Muscular tissue","Epithelial tissue","Connective tissue"], ans:"Muscular tissue"},
+
+{q:"Which type of tissue transports water in plants?", options:["Phloem","Xylem","Parenchyma","Collenchyma"], ans:"Xylem"},
+
+{q:"The outermost layer of the cell is:", options:["Nucleus","Cytoplasm","Cell membrane","Cell wall"], ans:"Cell membrane"},
+
+{q:"Which organelle contains chlorophyll?", options:["Mitochondria","Nucleus","Chloroplast","Ribosome"], ans:"Chloroplast"}
+
+],
+   "english":[
+
+{q:"Choose the correct synonym of 'Happy':", options:["Sad","Joyful","Angry","Tired"], ans:"Joyful"},
+
+{q:"Choose the correct antonym of 'Brave':", options:["Fearless","Cowardly","Strong","Bold"], ans:"Cowardly"},
+
+{q:"Identify the noun in the sentence: 'The boy is playing.'", options:["boy","playing","is","the"], ans:"boy"},
+
+{q:"Choose the correct verb: 'She ___ to school every day.'", options:["go","goes","going","gone"], ans:"goes"},
+
+{q:"Which of the following is an adjective?", options:["Run","Quick","Happily","Speak"], ans:"Quick"},
+
+{q:"Fill in the blank: 'I ___ a book yesterday.'", options:["read","reads","reading","will read"], ans:"read"},
+
+{q:"Choose the correct article: '___ apple a day keeps the doctor away.'", options:["A","An","The","No article"], ans:"An"},
+
+{q:"Identify the pronoun: 'She is my friend.'", options:["She","my","friend","is"], ans:"She"},
+
+{q:"Choose the correct preposition: 'He is good ___ maths.'", options:["in","on","at","with"], ans:"at"},
+
+{q:"Which sentence is correct?", options:["He go to school","He goes to school","He going to school","He gone to school"], ans:"He goes to school"}
+
+],
+  "hindi":[
+
+{q:"'जल' का अर्थ क्या है?", options:["आग","पानी","हवा","धरती"], ans:"पानी"},
+
+{q:"'आकाश' का पर्यायवाची क्या है?", options:["भूमि","गगन","जल","अग्नि"], ans:"गगन"},
+
+{q:"'सुंदर' का विलोम क्या है?", options:["खूबसूरत","अच्छा","बुरा","सुहावना"], ans:"बुरा"},
+
+{q:"संज्ञा किसे कहते हैं?", options:["क्रिया को","नाम को","विशेषता को","संख्या को"], ans:"नाम को"},
+
+{q:"'राम खेल रहा है' में क्रिया क्या है?", options:["राम","खेल","रहा","खेल रहा है"], ans:"खेल रहा है"},
+
+{q:"'मैं स्कूल जा रहा हूँ' में सर्वनाम कौन सा है?", options:["मैं","स्कूल","जा","रहा"], ans:"मैं"},
+
+{q:"'तेज' शब्द किस प्रकार का विशेषण है?", options:["गुणवाचक","संख्यावाचक","परिमाणवाचक","संकेतवाचक"], ans:"गुणवाचक"},
+
+{q:"'किताब' शब्द का लिंग क्या है?", options:["पुल्लिंग","स्त्रीलिंग","नपुंसकलिंग","इनमें से कोई नहीं"], ans:"स्त्रीलिंग"},
+
+{q:"'फल' शब्द का वचन क्या है?", options:["एकवचन","बहुवचन","दोनों","कोई नहीं"], ans:"दोनों"},
+
+{q:"'वह तेज दौड़ता है' में क्रिया विशेषण कौन सा है?", options:["वह","तेज","दौड़ता","है"], ans:"तेज"}
+
+]},
+
+
+  "10":{
+ "maths":[
+
+{q:"The zero of polynomial x² - 4 is:", options:["2","-2","Both 2 and -2","0"], ans:"Both 2 and -2"},
+
+{q:"If the discriminant of a quadratic equation is zero, then roots are:", options:["Real and unequal","Real and equal","Imaginary","No roots"], ans:"Real and equal"},
+
+{q:"The value of sin²θ + cos²θ is:", options:["0","1","2","-1"], ans:"1"},
+
+{q:"The distance between points (0,0) and (3,4) is:", options:["5","4","3","6"], ans:"5"},
+
+{q:"If A.P. has first term 2 and common difference 3, the second term is:", options:["3","5","6","2"], ans:"5"},
+
+{q:"Area of a circle is:", options:["πr²","2πr","πd","r²"], ans:"πr²"},
+
+{q:"The slope of line y = 2x + 3 is:", options:["2","3","-2","1"], ans:"2"},
+
+{q:"In triangle, sum of all angles is:", options:["90°","180°","270°","360°"], ans:"180°"},
+
+{q:"The formula for volume of cylinder is:", options:["πr²h","2πr","πr²","πh"], ans:"πr²h"},
+
+{q:"If tanθ = 1, then θ is:", options:["30°","45°","60°","90°"], ans:"45°"}
+
+],
+
+
+"physics":[
+
+{q:"The SI unit of electric current is:", options:["Volt","Ampere","Ohm","Watt"], ans:"Ampere"},
+
+{q:"Ohm's Law is:", options:["V = IR","P = VI","E = mc²","F = ma"], ans:"V = IR"},
+
+{q:"The resistance of a conductor depends on:", options:["Length","Area","Material","All of these"], ans:"All of these"},
+
+{q:"The unit of electric power is:", options:["Joule","Watt","Volt","Ampere"], ans:"Watt"},
+
+{q:"The magnetic field around a current carrying conductor is discovered by:", options:["Newton","Einstein","Oersted","Faraday"], ans:"Oersted"},
+
+{q:"The unit of electric energy is:", options:["Watt","Volt","Joule","Ohm"], ans:"Joule"},
+
+{q:"The device used to measure electric current is:", options:["Voltmeter","Ammeter","Galvanometer","Barometer"], ans:"Ammeter"},
+
+{q:"Which of the following is a good conductor of electricity?", options:["Plastic","Rubber","Copper","Wood"], ans:"Copper"},
+
+{q:"The heating effect of electric current is used in:", options:["Electric iron","Fan","Motor","Generator"], ans:"Electric iron"},
+
+{q:"The focal length of a convex lens is:", options:["Positive","Negative","Zero","Infinite"], ans:"Positive"}
+
+],
+
+"chemistry":[
+
+{q:"The pH value of a neutral solution is:", options:["0","7","14","1"], ans:"7"},
+
+{q:"Acids turn blue litmus to:", options:["Red","Green","Yellow","Blue"], ans:"Red"},
+
+{q:"Bases turn red litmus to:", options:["Blue","Green","Yellow","Red"], ans:"Blue"},
+
+{q:"Which gas is released when acid reacts with metal?", options:["Oxygen","Hydrogen","Carbon dioxide","Nitrogen"], ans:"Hydrogen"},
+
+{q:"The chemical formula of baking soda is:", options:["NaCl","NaHCO₃","Na₂CO₃","KOH"], ans:"NaHCO₃"},
+
+{q:"Which of the following is an example of a strong acid?", options:["HCl","CH₃COOH","H₂CO₃","H₂SO₃"], ans:"HCl"},
+
+{q:"The process of coating iron with zinc is called:", options:["Galvanization","Corrosion","Alloying","Electroplating"], ans:"Galvanization"},
+
+{q:"Rusting of iron requires:", options:["Only water","Only oxygen","Both oxygen and water","None"], ans:"Both oxygen and water"},
+
+{q:"Which of the following is an exothermic reaction?", options:["Photosynthesis","Respiration","Evaporation","Melting"], ans:"Respiration"},
+
+{q:"The general formula of alkanes is:", options:["CₙH₂ₙ","CₙH₂ₙ₊₂","CₙH₂ₙ₋₂","CₙH₂ₙ₊₁"], ans:"CₙH₂ₙ₊₂"}
+
+],
+"biology":[
+
+{q:"The process by which plants make food is called:", options:["Respiration","Digestion","Photosynthesis","Transpiration"], ans:"Photosynthesis"},
+
+{q:"The green pigment in plants is:", options:["Chlorophyll","Haemoglobin","Melanin","Carotene"], ans:"Chlorophyll"},
+
+{q:"Human digestive enzyme present in saliva is:", options:["Pepsin","Amylase","Lipase","Trypsin"], ans:"Amylase"},
+
+{q:"The functional unit of kidney is:", options:["Neuron","Nephron","Alveoli","Cell"], ans:"Nephron"},
+
+{q:"Which organ pumps blood in the human body?", options:["Lungs","Brain","Heart","Kidney"], ans:"Heart"},
+
+{q:"The process of breakdown of food to release energy is:", options:["Digestion","Respiration","Excretion","Circulation"], ans:"Respiration"},
+
+{q:"Which hormone controls growth in humans?", options:["Insulin","Thyroxine","Growth hormone","Adrenaline"], ans:"Growth hormone"},
+
+{q:"Which part of the brain controls balance?", options:["Cerebrum","Cerebellum","Medulla","Spinal cord"], ans:"Cerebellum"},
+
+{q:"The exchange of gases in lungs occurs in:", options:["Bronchi","Alveoli","Trachea","Diaphragm"], ans:"Alveoli"},
+
+{q:"The unit of heredity is:", options:["Gene","Chromosome","DNA","Cell"], ans:"Gene"}
+
+],
+"english":[
+
+{q:"Choose the correct synonym of 'Ancient':", options:["Modern","Old","New","Recent"], ans:"Old"},
+
+{q:"Choose the correct antonym of 'Victory':", options:["Success","Defeat","Win","Achievement"], ans:"Defeat"},
+
+{q:"Identify the noun in the sentence: 'The teacher explained the lesson.'", options:["teacher","explained","the","lesson"], ans:"teacher"},
+
+{q:"Choose the correct verb form: 'She ___ a song beautifully.'", options:["sing","sings","singing","sung"], ans:"sings"},
+
+{q:"Which of the following is an adverb?", options:["Quick","Quickly","Quickness","Quicken"], ans:"Quickly"},
+
+{q:"Fill in the blank: 'They ___ completed their homework.'", options:["has","have","had","having"], ans:"have"},
+
+{q:"Choose the correct article: '___ sun rises in the east.'", options:["A","An","The","No article"], ans:"The"},
+
+{q:"Identify the pronoun: 'He is my best friend.'", options:["He","my","best","friend"], ans:"He"},
+
+{q:"Choose the correct preposition: 'She is fond ___ music.'", options:["in","of","on","with"], ans:"of"},
+
+{q:"Which sentence is grammatically correct?", options:["She don't like tea","She doesn't likes tea","She doesn't like tea","She not like tea"], ans:"She doesn't like tea"}
+
+],
+
+"hindi":[
+
+{q:"'साहस' का पर्यायवाची क्या है?", options:["डर","वीरता","कमजोरी","शक्ति"], ans:"वीरता"},
+
+{q:"'अंधकार' का विलोम क्या है?", options:["रात","प्रकाश","छाया","दिन"], ans:"प्रकाश"},
+
+{q:"'राम खेल रहा है' में क्रिया क्या है?", options:["राम","खेल","रहा","खेल रहा है"], ans:"खेल रहा है"},
+
+{q:"'वह बहुत तेज दौड़ता है' में क्रिया विशेषण कौन सा है?", options:["वह","तेज","दौड़ता","है"], ans:"तेज"},
+
+{q:"'मैं स्कूल जाता हूँ' में सर्वनाम कौन सा है?", options:["मैं","स्कूल","जाता","हूँ"], ans:"मैं"},
+
+{q:"'किताब' शब्द का लिंग क्या है?", options:["पुल्लिंग","स्त्रीलिंग","नपुंसकलिंग","इनमें से कोई नहीं"], ans:"स्त्रीलिंग"},
+
+{q:"'लड़के' शब्द का वचन क्या है?", options:["एकवचन","बहुवचन","दोनों","कोई नहीं"], ans:"बहुवचन"},
+
+{q:"संज्ञा किसे कहते हैं?", options:["क्रिया को","नाम को","विशेषता को","संख्या को"], ans:"नाम को"},
+
+{q:"'सुंदर' शब्द किस प्रकार का विशेषण है?", options:["गुणवाचक","संख्यावाचक","परिमाणवाचक","संकेतवाचक"], ans:"गुणवाचक"},
+
+{q:"'वह पुस्तक पढ़ रहा है' में क्रिया क्या है?", options:["वह","पुस्तक","पढ़","पढ़ रहा है"], ans:"पढ़ रहा है"}
+
+]
+
+  },
+
+
+
+
+
+"11":{
+
+"maths":[
+
+{q:"Derivative of x² is:", options:["x","2x","x²","1"], ans:"2x"},
+{q:"Value of sin 90° is:", options:["0","1","-1","1/2"], ans:"1"},
+{q:"If A={1,2} and B={2,3}, A∪B is:", options:["{1,2,3}","{2}","{1,2}","{2,3}"], ans:"{1,2,3}"},
+{q:"Log₁₀(100) is:", options:["1","2","10","100"], ans:"2"},
+{q:"Slope of line y=3x+2 is:", options:["2","3","1","0"], ans:"3"},
+{q:"cos²θ + sin²θ = ?", options:["0","1","2","-1"], ans:"1"},
+{q:"Domain of √x is:", options:["x≥0","x≤0","All real","x≠0"], ans:"x≥0"},
+{q:"Matrix of order 2×3 has:", options:["5 elements","6 elements","4 elements","3 elements"], ans:"6 elements"},
+{q:"Value of tan 45° is:", options:["0","1","-1","√3"], ans:"1"},
+{q:"If x=2, then x³ is:", options:["6","8","4","2"], ans:"8"}
+
+],
+
+"physics":[
+
+{q:"Unit of velocity is:", options:["m","m/s","m/s²","kg"], ans:"m/s"},
+{q:"Acceleration is:", options:["Change in velocity","Force","Speed","Mass"], ans:"Change in velocity"},
+{q:"Unit of force is:", options:["Newton","Joule","Watt","Pascal"], ans:"Newton"},
+{q:"Work = ?", options:["F×d","m×a","v/t","d/t"], ans:"F×d"},
+{q:"Energy unit is:", options:["Joule","Newton","Watt","Volt"], ans:"Joule"},
+{q:"Velocity is:", options:["Scalar","Vector","Both","None"], ans:"Vector"},
+{q:"Distance is:", options:["Vector","Scalar","Force","Energy"], ans:"Scalar"},
+{q:"Inertia depends on:", options:["Mass","Velocity","Force","Time"], ans:"Mass"},
+{q:"Speed = ?", options:["d/t","t/d","m×a","v×t"], ans:"d/t"},
+{q:"Momentum = ?", options:["mv","ma","v/t","d/t"], ans:"mv"}
+
+],
+
+"chemistry":[
+
+{q:"Atomic number of Carbon is:", options:["6","12","8","14"], ans:"6"},
+{q:"Mole concept relates to:", options:["Mass","Number of particles","Volume","Density"], ans:"Number of particles"},
+{q:"pH of neutral solution:", options:["7","0","14","1"], ans:"7"},
+{q:"NaCl is:", options:["Salt","Acid","Base","Metal"], ans:"Salt"},
+{q:"Electron charge is:", options:["Negative","Positive","Neutral","None"], ans:"Negative"},
+{q:"Avogadro number is:", options:["6.022×10²³","10²³","10²²","6×10²²"], ans:"6.022×10²³"},
+{q:"Gas law PV=nRT is:", options:["Ideal gas law","Boyle's law","Charles law","None"], ans:"Ideal gas law"},
+{q:"Oxygen valency is:", options:["2","1","3","4"], ans:"2"},
+{q:"Periodic table is based on:", options:["Atomic number","Mass","Volume","Density"], ans:"Atomic number"},
+{q:"Water is:", options:["Compound","Element","Mixture","Gas"], ans:"Compound"}
+
+],
+
+"biology":[
+
+{q:"Cell is:", options:["Basic unit","Organ","Tissue","System"], ans:"Basic unit"},
+{q:"DNA is present in:", options:["Nucleus","Cytoplasm","Cell wall","Membrane"], ans:"Nucleus"},
+{q:"Photosynthesis occurs in:", options:["Chloroplast","Mitochondria","Nucleus","Ribosome"], ans:"Chloroplast"},
+{q:"Protein synthesis occurs in:", options:["Ribosome","Nucleus","Mitochondria","Golgi"], ans:"Ribosome"},
+{q:"Blood is:", options:["Tissue","Organ","Cell","Fluid"], ans:"Tissue"},
+{q:"Respiration releases:", options:["Energy","Oxygen","Water","Food"], ans:"Energy"},
+{q:"Heart pumps:", options:["Blood","Air","Water","Food"], ans:"Blood"},
+{q:"Neuron is:", options:["Nerve cell","Muscle","Bone","Tissue"], ans:"Nerve cell"},
+{q:"Enzyme is:", options:["Protein","Fat","Carb","Mineral"], ans:"Protein"},
+{q:"Genetics studies:", options:["Heredity","Energy","Force","Motion"], ans:"Heredity"}
+
+],
+
+"english":[
+
+{q:"Synonym of 'Big':", options:["Large","Small","Tiny","Short"], ans:"Large"},
+{q:"Antonym of 'Happy':", options:["Sad","Joyful","Excited","Glad"], ans:"Sad"},
+{q:"Verb in 'She runs fast':", options:["She","runs","fast","None"], ans:"runs"},
+{q:"Noun in 'The dog barked':", options:["dog","barked","The","None"], ans:"dog"},
+{q:"Adjective example:", options:["Quick","Run","Speak","Eat"], ans:"Quick"},
+{q:"Correct sentence:", options:["He go","He goes","He going","He gone"], ans:"He goes"},
+{q:"Pronoun in 'He is here':", options:["He","is","here","None"], ans:"He"},
+{q:"Preposition in 'on table':", options:["on","table","is","none"], ans:"on"},
+{q:"Past tense of go:", options:["went","gone","goes","going"], ans:"went"},
+{q:"Plural of child:", options:["children","childs","childes","child"], ans:"children"}
+
+],
+
+"hindi":[
+
+{q:"'जल' का अर्थ:", options:["पानी","आग","हवा","धरती"], ans:"पानी"},
+{q:"'आकाश' का पर्याय:", options:["गगन","भूमि","जल","अग्नि"], ans:"गगन"},
+{q:"'अंधेरा' का विलोम:", options:["प्रकाश","रात","छाया","दिन"], ans:"प्रकाश"},
+{q:"संज्ञा क्या है:", options:["नाम","क्रिया","विशेषण","संख्या"], ans:"नाम"},
+{q:"'मैं स्कूल जाता हूँ' में सर्वनाम:", options:["मैं","स्कूल","जाता","हूँ"], ans:"मैं"},
+{q:"क्रिया पहचानें:", options:["खेल रहा है","राम","घर","तेज"], ans:"खेल रहा है"},
+{q:"विशेषण उदाहरण:", options:["सुंदर","दौड़","खेल","जाना"], ans:"सुंदर"},
+{q:"लिंग of 'किताब':", options:["स्त्रीलिंग","पुल्लिंग","नपुंसक","कोई नहीं"], ans:"स्त्रीलिंग"},
+{q:"वचन of 'लड़के':", options:["बहुवचन","एकवचन","दोनों","कोई नहीं"], ans:"बहुवचन"},
+{q:"क्रिया विशेषण:", options:["तेज","राम","घर","खेल"], ans:"तेज"}
+
+]
+
+},
+
+"12":{
+
+"maths":[
+
+{q:"Derivative of sin x is:", options:["cos x","-cos x","sin x","-sin x"], ans:"cos x"},
+{q:"Integral of x dx is:", options:["x²/2","x","1/x","x³"], ans:"x²/2"},
+{q:"Value of tan 45° is:", options:["1","0","-1","√3"], ans:"1"},
+{q:"Determinant of matrix [1 0;0 1] is:", options:["0","1","-1","2"], ans:"1"},
+{q:"If f(x)=x², then f'(2) is:", options:["2","4","6","8"], ans:"4"},
+{q:"Value of cos 0° is:", options:["0","1","-1","1/2"], ans:"1"},
+{q:"Limit of x→0 (sin x / x) is:", options:["0","1","∞","-1"], ans:"1"},
+{q:"Equation of straight line y=mx+c, m represents:", options:["Slope","Intercept","Angle","Distance"], ans:"Slope"},
+{q:"Probability value lies between:", options:["0 to 1","1 to 10","-1 to 1","0 to ∞"], ans:"0 to 1"},
+{q:"Vector has:", options:["Magnitude only","Direction only","Both","None"], ans:"Both"}
+
+],
+
+"physics":[
+
+{q:"Unit of electric field is:", options:["N/C","Volt","Ampere","Ohm"], ans:"N/C"},
+{q:"Ohm's law is:", options:["V=IR","F=ma","E=mc²","P=VI"], ans:"V=IR"},
+{q:"Unit of capacitance:", options:["Farad","Henry","Ohm","Volt"], ans:"Farad"},
+{q:"Magnetic field unit:", options:["Tesla","Newton","Watt","Pascal"], ans:"Tesla"},
+{q:"Speed of light is:", options:["3×10⁸ m/s","3×10⁶","3×10⁵","3×10⁷"], ans:"3×10⁸ m/s"},
+{q:"Lens used in human eye:", options:["Convex","Concave","Plane","None"], ans:"Convex"},
+{q:"Unit of frequency:", options:["Hertz","Watt","Joule","Volt"], ans:"Hertz"},
+{q:"Transformer works on:", options:["AC","DC","Both","None"], ans:"AC"},
+{q:"Energy unit:", options:["Joule","Newton","Watt","Volt"], ans:"Joule"},
+{q:"Electron charge is:", options:["Negative","Positive","Neutral","None"], ans:"Negative"}
+
+],
+
+"chemistry":[
+
+{q:"pH of strong acid:", options:["<7","7",">7","0"], ans:"<7"},
+{q:"Functional group of alcohol:", options:["-OH","-COOH","-NH2","-CHO"], ans:"-OH"},
+{q:"Atomic number of Oxygen:", options:["8","6","7","10"], ans:"8"},
+{q:"Avogadro number:", options:["6.022×10²³","10²³","10²²","6×10²²"], ans:"6.022×10²³"},
+{q:"Electrolysis involves:", options:["Electric current","Heat","Light","Pressure"], ans:"Electric current"},
+{q:"Strong base example:", options:["NaOH","HCl","CO2","H2O"], ans:"NaOH"},
+{q:"Hybridization of CH4:", options:["sp3","sp2","sp","dsp2"], ans:"sp3"},
+{q:"Oxidation means:", options:["Loss of electrons","Gain of electrons","No change","Neutral"], ans:"Loss of electrons"},
+{q:"Reduction means:", options:["Gain of electrons","Loss of electrons","No change","Neutral"], ans:"Gain of electrons"},
+{q:"Catalyst does:", options:["Speeds reaction","Slows reaction","Stops reaction","No effect"], ans:"Speeds reaction"}
+
+],
+
+"biology":[
+
+{q:"DNA full form:", options:["Deoxyribonucleic acid","Protein","RNA","Cell"], ans:"Deoxyribonucleic acid"},
+{q:"Human chromosome number:", options:["46","23","44","48"], ans:"46"},
+{q:"Photosynthesis occurs in:", options:["Chloroplast","Mitochondria","Nucleus","Ribosome"], ans:"Chloroplast"},
+{q:"Hormone insulin controls:", options:["Sugar","Blood pressure","Temperature","Growth"], ans:"Sugar"},
+{q:"Unit of heredity:", options:["Gene","Cell","DNA","Chromosome"], ans:"Gene"},
+{q:"Heart has chambers:", options:["4","2","3","5"], ans:"4"},
+{q:"Protein synthesis site:", options:["Ribosome","Nucleus","Golgi","Mitochondria"], ans:"Ribosome"},
+{q:"Evolution theory by:", options:["Darwin","Newton","Einstein","Bohr"], ans:"Darwin"},
+{q:"Blood group system:", options:["ABO","XYZ","ABC","DEF"], ans:"ABO"},
+{q:"Respiration produces:", options:["Energy","Water","Oxygen","Food"], ans:"Energy"}
+
+],
+
+"english":[
+
+{q:"Synonym of 'Brave':", options:["Courageous","Coward","Weak","Fearful"], ans:"Courageous"},
+{q:"Antonym of 'Success':", options:["Failure","Win","Victory","Achievement"], ans:"Failure"},
+{q:"Verb in 'She writes well':", options:["She","writes","well","None"], ans:"writes"},
+{q:"Noun in 'The boy runs':", options:["boy","runs","The","None"], ans:"boy"},
+{q:"Adverb example:", options:["Quickly","Quick","Run","Eat"], ans:"Quickly"},
+{q:"Correct sentence:", options:["He go","He goes","He going","He gone"], ans:"He goes"},
+{q:"Pronoun:", options:["He","Book","Run","Fast"], ans:"He"},
+{q:"Past tense of eat:", options:["ate","eat","eaten","eating"], ans:"ate"},
+{q:"Plural of mouse:", options:["mice","mouses","mouse","mices"], ans:"mice"},
+{q:"Article: ___ sun rises", options:["The","A","An","None"], ans:"The"}
+
+],
+
+"hindi":[
+
+{q:"'जल' का अर्थ:", options:["पानी","आग","हवा","धरती"], ans:"पानी"},
+{q:"'आकाश' का पर्याय:", options:["गगन","भूमि","जल","अग्नि"], ans:"गगन"},
+{q:"'सफलता' का विलोम:", options:["असफलता","जीत","प्राप्ति","उन्नति"], ans:"असफलता"},
+{q:"संज्ञा क्या है:", options:["नाम","क्रिया","विशेषण","संख्या"], ans:"नाम"},
+{q:"सर्वनाम पहचानें:", options:["मैं","घर","खेल","तेज"], ans:"मैं"},
+{q:"क्रिया:", options:["खेल रहा है","राम","घर","तेज"], ans:"खेल रहा है"},
+{q:"विशेषण:", options:["सुंदर","दौड़","खेल","जाना"], ans:"सुंदर"},
+{q:"लिंग 'किताब':", options:["स्त्रीलिंग","पुल्लिंग","नपुंसक","कोई नहीं"], ans:"स्त्रीलिंग"},
+{q:"वचन 'लड़के':", options:["बहुवचन","एकवचन","दोनों","कोई नहीं"], ans:"बहुवचन"},
+{q:"क्रिया विशेषण:", options:["तेज","राम","घर","खेल"], ans:"तेज"}
+
+]
+
+}
+
+};
+
+let quizData = questions[cls]?.[sub];
+
+let current = 0;
+let answers = {};
+
+function loadQuestion(){
+  let q = quizData[current];
+
+  let html = `<p><b>Q${current+1}. ${q.q}</b></p><div class="options">`;
+
+  q.options.forEach(opt=>{
+    html += `
+    <label>
+      <input type="radio" name="q" value="${opt}"
+      ${answers[current]==opt ? "checked":""}>
+      ${opt}
+    </label>`;
+  });
+
+  html += "</div>";
+
+  document.getElementById("questionBox").innerHTML = html;
+}
+
+
+// SAVE
+function saveAnswer(){
+  let selected = document.querySelector('input[name="q"]:checked');
+  if(selected){
+    answers[current] = selected.value;
+  }
+}
+
+
+// NEXT
+function nextQ(){
+  saveAnswer();
+  if(current < quizData.length-1){
+    current++;
+    loadQuestion();
+  }
+}
+
+
+// PREV
+function prevQ(){
+  saveAnswer();
+  if(current > 0){
+    current--;
+    loadQuestion();
+  }
+}
+function submitQuiz(){
+  saveAnswer(); // IMPORTANT: save last question
+
+  let score = 0;
+
+  quizData.forEach((item, index) => {
+    if(answers[index] === item.ans){
+      score++;
+    }
+  });
+
+  let total = quizData.length;
+
+  let time = document.getElementById("timer") 
+              ? document.getElementById("timer").innerText 
+              : "00:00";
+
+  window.location.href =
+    "result.html?total=" + total +
+    "&correct=" + score +
+    "&time=" + time;
+}
+
+
+// TIMER
+let time = 600;
+setInterval(()=>{
+  let m = Math.floor(time/60);
+  let s = time%60;
+  document.getElementById("timer").innerText =
+    `${m}:${s<10?"0"+s:s}`;
+  time--;
+},1000);
+
+
+// PROGRESS
+function updateProgress(){
+  let done = Object.keys(answers).length;
+  let percent = (done / quizData.length)*100;
+  document.getElementById("bar").style.width = percent+"%";
+}
+
+document.addEventListener("change", updateProgress);
+
+
+// INIT
+if(quizData){
+  loadQuestion();
+}else{
+  document.getElementById("questionBox").innerHTML="No quiz found";
+}
+
+</script>
+
+</body>
+</html>

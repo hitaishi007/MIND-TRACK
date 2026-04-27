@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Quiz Result</title>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#eef2f7;
+}
+
+header{
+  background:#0b2a55;
+  color:white;
+  padding:15px 40px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.container{
+  padding:30px 40px;
+  text-align:center;
+}
+
+h1{ margin-bottom:5px; }
+
+.subtitle{
+  color:#666;
+  margin-bottom:30px;
+}
+
+.stats{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  justify-content:space-between;
+}
+
+.card{
+  flex:1;
+  min-width:150px;
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.score-box{
+  display:flex;
+  gap:20px;
+  margin-top:30px;
+  flex-wrap:wrap;
+}
+
+.score, .pace{
+  flex:1;
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.recommend{
+  margin-top:30px;
+  background:#e9f7ef;
+  padding:20px;
+  border-radius:12px;
+}
+
+.item{
+  display:flex;
+  justify-content:space-between;
+  background:white;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+.buttons{
+  margin-top:30px;
+}
+
+.btn{
+  padding:12px 20px;
+  border:none;
+  border-radius:8px;
+  margin:10px;
+  cursor:pointer;
+}
+
+.primary{ background:#0b2a55; color:white; }
+.secondary{ background:#ddd; }
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>📘 Adaptive Learning</h2>
+</header>
+
+<div class="container">
+
+<h1>Quiz Result 🏆</h1>
+<p class="subtitle">Your performance summary</p>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="card">
+    <h4>Total</h4>
+    <h3 id="total">0</h3>
+  </div>
+
+  <div class="card">
+    <h4>Correct</h4>
+    <h3 id="correct">0</h3>
+  </div>
+
+  <div class="card">
+    <h4>Wrong</h4>
+    <h3 id="wrong">0</h3>
+  </div>
+
+  <div class="card">
+    <h4>Time</h4>
+    <h3 id="time">00:00</h3>
+  </div>
+</div>
+
+<!-- SCORE -->
+<div class="score-box">
+  <div class="score">
+    <h3>Score</h3>
+    <h1 id="percent">0%</h1>
+    <p id="msg"></p>
+  </div>
+
+  <div class="pace">
+    <h3>Pace</h3>
+    <h2 id="paceText">---</h2>
+  </div>
+</div>
+
+<!-- RECOMMEND -->
+<div class="recommend">
+  <h3>📘 Recommended Learning</h3>
+  <div id="recList"></div>
+</div>
+
+<!-- BUTTONS -->
+<div class="buttons">
+  <button class="btn primary" onclick="retry()">Try Again</button>
+  <button class="btn secondary" onclick="home()">Home</button>
+</div>
+
+</div>
+
+<script>
+
+// ================= URL DATA =================
+let params = new URLSearchParams(window.location.search);
+
+let total = Number(params.get("total")) || 0;
+let correct = Number(params.get("correct")) || 0;
+let time = params.get("time") || "00:00";
+
+let className = params.get("class") || "10";
+let subject = params.get("subject") || "maths";
+
+let wrong = total - correct;
+let percent = total ? Math.round((correct / total) * 100) : 0;
+
+// ================= UI SET =================
+document.getElementById("total").innerText = total;
+document.getElementById("correct").innerText = correct;
+document.getElementById("wrong").innerText = wrong;
+document.getElementById("time").innerText = time;
+document.getElementById("percent").innerText = percent + "%";
+
+document.getElementById("msg").innerText =
+percent >= 80 ? "Excellent 🎉" :
+percent >= 50 ? "Good 👍" :
+"Need Improvement 📚";
+
+let pace = percent >= 80 ? "fast" : percent >= 50 ? "balanced" : "slow";
+document.getElementById("paceText").innerText = pace;
+
+// ================= CONTENT SYSTEM =================
+let content = {
+
+  "9": {
+    maths: {
+      slow: {
+        video: [{title:"Basics of Maths", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"NCERT Maths Notes", link:"https://ncert.nic.in/textbook.php?iemh1=0-16"}],
+        questions: [{title:"Practice Questions", link:"https://www.learncbse.in/ncert-solutions-for-class-9-maths/"}]
+      },
+      balanced: {
+        video: [{title:"Concept + Practice", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Formula Sheet", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Extra Questions", link:"https://www.learncbse.in/maths-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision Tricks", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Quick Revision", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Advanced Questions", link:"https://www.learncbse.in/maths-class-9-extra-questions/"}]
+      }
+    },
+
+    physics: {
+      slow: {
+        video: [{title:"Motion Basics", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Physics Notes", link:"https://ncert.nic.in/textbook.php?ieph1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Numericals", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Concept Notes", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Advanced Set", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    chemistry: {
+      slow: {
+        video: [{title:"Matter Basics", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Chemistry Notes", link:"https://ncert.nic.in/textbook.php?iech1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concepts Explained", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Advanced Practice", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    biology: {
+      slow: {
+        video: [{title:"Cell Basics", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Bio Notes", link:"https://ncert.nic.in/textbook.php?iebh1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concept Video", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Revision Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    english: {
+      slow: {
+        video: [{title:"Grammar Basics", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Grammar Notes", link:"https://ncert.nic.in/textbook.php?iebe1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-english/"}]
+      },
+      balanced: {
+        video: [{title:"Practice Video", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/english-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/english-class-9-extra-questions/"}]
+      }
+    },
+
+    hindi: {
+      slow: {
+        video: [{title:"Hindi Basics", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Hindi Notes", link:"https://ncert.nic.in/textbook.php?iehn1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-hindi/"}]
+      },
+      balanced: {
+        video: [{title:"Concept", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/hindi-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/hindi-class-9-extra-questions/"}]
+      }
+    }
+  },
+
+
+
+
+  "10": {
+    maths: {
+      slow: {
+        video: [{title:"Basics of Maths", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"NCERT Maths Notes", link:"https://ncert.nic.in/textbook.php?iemh1=0-16"}],
+        questions: [{title:"Practice Questions", link:"https://www.learncbse.in/ncert-solutions-for-class-9-maths/"}]
+      },
+      balanced: {
+        video: [{title:"Concept + Practice", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Formula Sheet", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Extra Questions", link:"https://www.learncbse.in/maths-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision Tricks", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Quick Revision", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Advanced Questions", link:"https://www.learncbse.in/maths-class-9-extra-questions/"}]
+      }
+    },
+
+    physics: {
+      slow: {
+        video: [{title:"Motion Basics", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Physics Notes", link:"https://ncert.nic.in/textbook.php?ieph1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Numericals", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Concept Notes", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Advanced Set", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    chemistry: {
+      slow: {
+        video: [{title:"Matter Basics", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Chemistry Notes", link:"https://ncert.nic.in/textbook.php?iech1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concepts Explained", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Advanced Practice", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    biology: {
+      slow: {
+        video: [{title:"Cell Basics", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Bio Notes", link:"https://ncert.nic.in/textbook.php?iebh1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concept Video", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Revision Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    english: {
+      slow: {
+        video: [{title:"Grammar Basics", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Grammar Notes", link:"https://ncert.nic.in/textbook.php?iebe1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-english/"}]
+      },
+      balanced: {
+        video: [{title:"Practice Video", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/english-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/english-class-9-extra-questions/"}]
+      }
+    },
+
+    hindi: {
+      slow: {
+        video: [{title:"Hindi Basics", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Hindi Notes", link:"https://ncert.nic.in/textbook.php?iehn1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-hindi/"}]
+      },
+      balanced: {
+        video: [{title:"Concept", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/hindi-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/hindi-class-9-extra-questions/"}]
+      }
+    }
+  },
+
+  "11": {
+    maths: {
+      slow: {
+        video: [{title:"Basics of Maths", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"NCERT Maths Notes", link:"https://ncert.nic.in/textbook.php?iemh1=0-16"}],
+        questions: [{title:"Practice Questions", link:"https://www.learncbse.in/ncert-solutions-for-class-9-maths/"}]
+      },
+      balanced: {
+        video: [{title:"Concept + Practice", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Formula Sheet", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Extra Questions", link:"https://www.learncbse.in/maths-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision Tricks", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Quick Revision", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Advanced Questions", link:"https://www.learncbse.in/maths-class-9-extra-questions/"}]
+      }
+    },
+
+    physics: {
+      slow: {
+        video: [{title:"Motion Basics", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Physics Notes", link:"https://ncert.nic.in/textbook.php?ieph1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Numericals", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Concept Notes", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Advanced Set", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    chemistry: {
+      slow: {
+        video: [{title:"Matter Basics", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Chemistry Notes", link:"https://ncert.nic.in/textbook.php?iech1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concepts Explained", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Advanced Practice", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    biology: {
+      slow: {
+        video: [{title:"Cell Basics", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Bio Notes", link:"https://ncert.nic.in/textbook.php?iebh1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concept Video", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Revision Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    english: {
+      slow: {
+        video: [{title:"Grammar Basics", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Grammar Notes", link:"https://ncert.nic.in/textbook.php?iebe1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-english/"}]
+      },
+      balanced: {
+        video: [{title:"Practice Video", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/english-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/english-class-9-extra-questions/"}]
+      }
+    },
+
+    hindi: {
+      slow: {
+        video: [{title:"Hindi Basics", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Hindi Notes", link:"https://ncert.nic.in/textbook.php?iehn1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-hindi/"}]
+      },
+      balanced: {
+        video: [{title:"Concept", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/hindi-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/hindi-class-9-extra-questions/"}]
+      }
+    }
+  },
+
+  "12": {
+    maths: {
+      slow: {
+        video: [{title:"Basics of Maths", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"NCERT Maths Notes", link:"https://ncert.nic.in/textbook.php?iemh1=0-16"}],
+        questions: [{title:"Practice Questions", link:"https://www.learncbse.in/ncert-solutions-for-class-9-maths/"}]
+      },
+      balanced: {
+        video: [{title:"Concept + Practice", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Formula Sheet", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Extra Questions", link:"https://www.learncbse.in/maths-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision Tricks", link:"https://www.youtube.com/watch?v=Qk0zUZW-U_M"}],
+        pdf: [{title:"Quick Revision", link:"https://byjus.com/maths/class-9-maths-formulas/"}],
+        questions: [{title:"Advanced Questions", link:"https://www.learncbse.in/maths-class-9-extra-questions/"}]
+      }
+    },
+
+    physics: {
+      slow: {
+        video: [{title:"Motion Basics", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Physics Notes", link:"https://ncert.nic.in/textbook.php?ieph1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Numericals", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Concept Notes", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=HEfHFsfGXjs"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/physics/class-9-physics-notes/"}],
+        questions: [{title:"Advanced Set", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    chemistry: {
+      slow: {
+        video: [{title:"Matter Basics", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Chemistry Notes", link:"https://ncert.nic.in/textbook.php?iech1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concepts Explained", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Quick Revision", link:"https://www.youtube.com/watch?v=G6v6p7R0r7A"}],
+        pdf: [{title:"Revision Sheet", link:"https://byjus.com/chemistry/class-9-chemistry-notes/"}],
+        questions: [{title:"Advanced Practice", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    biology: {
+      slow: {
+        video: [{title:"Cell Basics", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Bio Notes", link:"https://ncert.nic.in/textbook.php?iebh1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-science/"}]
+      },
+      balanced: {
+        video: [{title:"Concept Video", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Important Questions", link:"https://www.learncbse.in/science-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=URUJD5NEXC8"}],
+        pdf: [{title:"Revision Notes", link:"https://byjus.com/biology/class-9-biology-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/science-class-9-extra-questions/"}]
+      }
+    },
+
+    english: {
+      slow: {
+        video: [{title:"Grammar Basics", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Grammar Notes", link:"https://ncert.nic.in/textbook.php?iebe1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-english/"}]
+      },
+      balanced: {
+        video: [{title:"Practice Video", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/english-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=2y6t1QeF6xA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/english/class-9-english-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/english-class-9-extra-questions/"}]
+      }
+    },
+
+    hindi: {
+      slow: {
+        video: [{title:"Hindi Basics", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Hindi Notes", link:"https://ncert.nic.in/textbook.php?iehn1=0-16"}],
+        questions: [{title:"Practice", link:"https://www.learncbse.in/ncert-solutions-for-class-9-hindi/"}]
+      },
+      balanced: {
+        video: [{title:"Concept", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Important", link:"https://www.learncbse.in/hindi-class-9-important-questions/"}]
+      },
+      fast: {
+        video: [{title:"Revision", link:"https://www.youtube.com/watch?v=ZzJk2kWzXoA"}],
+        pdf: [{title:"Quick Notes", link:"https://byjus.com/hindi/class-9-hindi-notes/"}],
+        questions: [{title:"Advanced", link:"https://www.learncbse.in/hindi-class-9-extra-questions/"}]
+      }
+    }
+  }
+
+};
+
+
+
+
+
+
+
+
+
+// ================= RENDER =================
+let recList = document.getElementById("recList");
+recList.innerHTML = "";
+
+let data = content?.[className]?.[subject];
+
+function show(title, arr){
+  recList.innerHTML += `<h4 style="margin-top:15px;">${title}</h4>`;
+
+  arr.forEach(item => {
+    recList.innerHTML += `
+      <div class="item">
+        <span>${item.title}</span>
+        <button onclick="window.open('${item.link}','_blank')">Open</button>
+      </div>
+    `;
+  });
+}
+
+if(data){
+  let selected = data[pace];
+  show("🎥 Videos", selected.video);
+  show("📄 PDFs", selected.pdf);
+  show("✏️ Questions", selected.questions);
+}
+else{
+  recList.innerHTML = "No content available";
+}
+
+// ================= BUTTONS =================
+function retry(){
+  window.history.back();
+}
+
+function home(){
+  window.location.href = "home.html";
+}
+
+</script>
+
+</body>
+</html>
